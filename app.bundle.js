@@ -46958,6 +46958,7 @@ class AssetManager {
     constructor() {
         this.AssetLocations = {};
         this.Textures = {};
+        this.addSpritePaths();
         this.AssetLocations["clockFace"] = 'assets/clock_face.png';
         this.AssetLocations["clockHourPointer"] = 'assets/clock_hand_hour.png';
         this.AssetLocations["clockMinutePointer"] = 'assets/clock_hand_minute.png';
@@ -46989,6 +46990,34 @@ class AssetManager {
         this.AssetLocations["redPocket"] = "assets/red_pocket.png";
         this.AssetLocations["workEnds"] = "assets/overtimeBegins.png";
         this.AssetLocations["workBegins"] = "assets/work_starts_.png";
+    }
+    addSpritePaths() {
+        const shadowSpritePaths1 = [
+            "assets/shadowWorkerFrames/shadowsA1.png",
+            "assets/shadowWorkerFrames/shadowsA2.png",
+            "assets/shadowWorkerFrames/shadowsA3.png",
+            "assets/shadowWorkerFrames/shadowsA4.png",
+            "assets/shadowWorkerFrames/shadowsA5.png"
+        ];
+        const shadowSpritePaths2 = [
+            "assets/shadowWorkerFrames/shadowsB1.png",
+            "assets/shadowWorkerFrames/shadowsB2.png",
+            "assets/shadowWorkerFrames/shadowsB3.png",
+            "assets/shadowWorkerFrames/shadowsB4.png",
+            "assets/shadowWorkerFrames/shadowsB5.png"
+        ];
+        const shadowSpritePaths3 = [
+            "assets/shadowWorkerFrames/shadowsC1.png",
+            "assets/shadowWorkerFrames/shadowsC2.png",
+            "assets/shadowWorkerFrames/shadowsC3.png",
+            "assets/shadowWorkerFrames/shadowsC4.png",
+            "assets/shadowWorkerFrames/shadowsC5.png"
+        ];
+        const allSpritePaths = [shadowSpritePaths1, shadowSpritePaths2, shadowSpritePaths3];
+        this.animationSpriteNames = allSpritePaths.map(x => x.map(path => path.split('.')[0].substring(1 + path.lastIndexOf('/'))));
+        const allSpritePathsFlat = [];
+        allSpritePaths.map(x => allSpritePathsFlat.push(...x));
+        allSpritePathsFlat.forEach(path => this.AssetLocations[path.split('.')[0].substring(1 + path.lastIndexOf('/'))] = path);
     }
     load() {
         console.log('loading');
@@ -47595,6 +47624,18 @@ class endScene {
         const images = this.gameStats.storyImages;
         const money = this.gameStats.money;
         const totalFreetime = this.gameStats.accumulatedFreeHours;
+        images.forEach(image => {
+            const imageSprite = getSprite(this.assetManager.Textures[image]);
+            const imageSpriteDragable = new _ui_dragable__WEBPACK_IMPORTED_MODULE_1__["Dragable"](imageSprite);
+            imageSpriteDragable.addStartCallback(() => {
+                imageSprite.parent.setChildIndex(imageSprite, imageSprite.parent.children.length - 1);
+            });
+            imageSprite.anchor.set(0.5, 0.5);
+            this.app.stage.addChild(imageSprite);
+            imageSprite.rotation = Math.random() * Math.PI * 0.25 - Math.PI * 0.125;
+            imageSprite.position.set(0.2 * appWidth + Math.random() * 0.6 * appWidth - 0 * imageSprite.width, 0.2 * appHeight + Math.random() * 0.6 * appHeight - 0 * imageSprite.height);
+            imageSprite.scale.set(1, 1);
+        });
         console.log({ money, totalFreetime });
         if (money >= 300) {
             console.log("University");
@@ -47609,18 +47650,6 @@ class endScene {
             console.log("Gone");
             this.photoDisplayer.spawnPhoto("day5Gone");
         }
-        images.forEach(image => {
-            const imageSprite = getSprite(this.assetManager.Textures[image]);
-            const imageSpriteDragable = new _ui_dragable__WEBPACK_IMPORTED_MODULE_1__["Dragable"](imageSprite);
-            imageSpriteDragable.addStartCallback(() => {
-                imageSprite.parent.setChildIndex(imageSprite, imageSprite.parent.children.length - 1);
-            });
-            imageSprite.anchor.set(0.5, 0.5);
-            this.app.stage.addChild(imageSprite);
-            imageSprite.rotation = Math.random() * Math.PI * 0.25 - Math.PI * 0.125;
-            imageSprite.position.set(0.2 * appWidth + Math.random() * 0.6 * appWidth - 0 * imageSprite.width, 0.2 * appHeight + Math.random() * 0.6 * appHeight - 0 * imageSprite.height);
-            imageSprite.scale.set(1, 1);
-        });
     }
     removeScene() {
         this.app.stage.removeChild(this.app.stage);
@@ -47659,33 +47688,20 @@ class factoryScene {
         this.sceneManager = sceneManager;
         this.gameStats = gameStats;
         this.photoDisplayer = photoDisplayer;
+        this.isDisposing = false;
         this.clockSound = new _createAudio__WEBPACK_IMPORTED_MODULE_4__["CreateAudio"]("clock.mp3");
         this.conveyorSound = new _createAudio__WEBPACK_IMPORTED_MODULE_4__["CreateAudio"]("conveyor.mp3");
         this.workBuzzerSound = new _createAudio__WEBPACK_IMPORTED_MODULE_4__["CreateAudio"]("workBuzzer.mp3");
         this.lightSwitchSound = new _createAudio__WEBPACK_IMPORTED_MODULE_4__["CreateAudio"]("lightSwitch.mp3");
         this.crowdSound = new _createAudio__WEBPACK_IMPORTED_MODULE_4__["CreateAudio"]("crowd.mp3");
         this.lightFilter = new pixi_js__WEBPACK_IMPORTED_MODULE_0__["filters"].AlphaFilter();
-        this.shadowSpritePaths1 = [
-            "assets/shadowWorkerFrames/shadowsA1.png",
-            "assets/shadowWorkerFrames/shadowsA2.png",
-            "assets/shadowWorkerFrames/shadowsA3.png",
-            "assets/shadowWorkerFrames/shadowsA4.png",
-            "assets/shadowWorkerFrames/shadowsA5.png"
-        ];
-        this.shadowSpritePaths2 = [
-            "assets/shadowWorkerFrames/shadowsB1.png",
-            "assets/shadowWorkerFrames/shadowsB2.png",
-            "assets/shadowWorkerFrames/shadowsB3.png",
-            "assets/shadowWorkerFrames/shadowsB4.png",
-            "assets/shadowWorkerFrames/shadowsB5.png"
-        ];
-        this.shadowSpritePaths3 = [
-            "assets/shadowWorkerFrames/shadowsC1.png",
-            "assets/shadowWorkerFrames/shadowsC2.png",
-            "assets/shadowWorkerFrames/shadowsC3.png",
-            "assets/shadowWorkerFrames/shadowsC4.png",
-            "assets/shadowWorkerFrames/shadowsC5.png"
-        ];
+        this.getSprite = (spriteSrc) => {
+            return pixi_js__WEBPACK_IMPORTED_MODULE_0__["Sprite"].from(spriteSrc);
+        };
+        this.getTexture = (textureSrc) => {
+            return pixi_js__WEBPACK_IMPORTED_MODULE_0__["Texture"].from(textureSrc);
+        };
+        this.stopWorkerAnimation = () => { };
     }
     showScene() {
         this.app.stage = new pixi_js__WEBPACK_IMPORTED_MODULE_0__["Container"]();
@@ -47697,10 +47713,7 @@ class factoryScene {
         const appWidth = this.app.view.width;
         const appHeight = this.app.view.height;
         this.overtimeActive = false;
-        const getSprite = (spriteSrc) => {
-            return pixi_js__WEBPACK_IMPORTED_MODULE_0__["Sprite"].from(spriteSrc);
-        };
-        const belt = getSprite(this.assetManager.Textures["factory"]);
+        const belt = this.getSprite(this.assetManager.Textures["factory"]);
         this.app.stage.addChild(belt);
         this.beltContainer = new pixi_js__WEBPACK_IMPORTED_MODULE_0__["Container"]();
         this.beltContainer.addChild(belt);
@@ -47717,11 +47730,11 @@ class factoryScene {
         this.crowdSound.play();
         this.crowdSound.loop();
         // Spawn shadows
-        this.spawnShadows(3);
-        const factorySprite = getSprite(this.assetManager.Textures["belt"]);
+        this.spawnAnimatedWorkers();
+        const factorySprite = this.getSprite(this.assetManager.Textures["belt"]);
         factorySprite.width = appWidth;
         factorySprite.height = appHeight;
-        const playButton = getSprite(this.assetManager.Textures["exitSign"]);
+        const playButton = this.getSprite(this.assetManager.Textures["exitSign"]);
         const playButtonClickable = new _ui_clickable__WEBPACK_IMPORTED_MODULE_2__["Clickable"](playButton);
         playButtonClickable.addCallback(() => {
             this.gameStats.finishDay(this.clock.getTime());
@@ -47732,7 +47745,7 @@ class factoryScene {
         playButton.position.set(appWidth - playButton.width, 0.3 * appHeight);
         this.app.stage.addChild(playButton);
         this.app.stage.addChild(factorySprite);
-        const moneyPocket = getSprite("redPocket");
+        const moneyPocket = this.getSprite("redPocket");
         this.app.stage.addChild(moneyPocket);
         moneyPocket.pivot.set(moneyPocket.width / 2, moneyPocket.height / 2);
         moneyPocket.position.set(appWidth / 2, appHeight * 0.88);
@@ -47780,17 +47793,17 @@ class factoryScene {
             }, 33);
         };
         moneyUpdater();
-        this.box = getSprite(this.assetManager.Textures["box"]);
+        this.box = this.getSprite(this.assetManager.Textures["box"]);
         this.box.scale.set(0.5, 0.5);
         this.box.pivot.set(this.box.width * 0.5, this.box.height * 0.5);
         this.box.position.set(appWidth - this.box.width, appHeight - 0.75 * this.box.height * 0.5);
-        this.clock = new _ui_clock__WEBPACK_IMPORTED_MODULE_1__["Clock"](getSprite(this.assetManager.Textures["clockFace"]), getSprite(this.assetManager.Textures["clockHourPointer"]), getSprite(this.assetManager.Textures["clockMinutePointer"]), 0.5);
+        this.clock = new _ui_clock__WEBPACK_IMPORTED_MODULE_1__["Clock"](this.getSprite(this.assetManager.Textures["clockFace"]), this.getSprite(this.assetManager.Textures["clockHourPointer"]), this.getSprite(this.assetManager.Textures["clockMinutePointer"]), 0.5);
         this.clock.startClock();
         this.clock.addEndofDayCallbacks(() => this.stayAtWork());
         this.clock.addWorkEndCallback(() => this.overTimeBegins());
         this.clock.addWorkStartCallback(() => this.workBegins());
         this.app.stage.addChild(this.clock.mainContainer);
-        this.clock.mainContainer.position = new pixi_js__WEBPACK_IMPORTED_MODULE_0__["Point"](50, appHeight * 0.2);
+        this.clock.mainContainer.position.set(50, appHeight * 0.2);
         this.lightFilter.alpha = 0.5;
         const dollSize = 128;
         this.dollkeeper = new _dollKeeper__WEBPACK_IMPORTED_MODULE_3__["dollKeeper"](this.app.stage, 4, this.assetManager.Textures["doll"], new pixi_js__WEBPACK_IMPORTED_MODULE_0__["Point"](dollSize, dollSize), [new pixi_js__WEBPACK_IMPORTED_MODULE_0__["Point"](-220, appHeight * 0.75),
@@ -47821,69 +47834,33 @@ class factoryScene {
             }
         }, 20);
     }
-    spawnShadows(rowCount) {
-        for (let rows = rowCount; rows > 0; rows--) {
-            let shadowSprite;
-            if (rows === 1) {
-                shadowSprite = pixi_js__WEBPACK_IMPORTED_MODULE_0__["Sprite"].from(this.shadowSpritePaths1[0]);
-            }
-            else if (rows === 2) {
-                shadowSprite = pixi_js__WEBPACK_IMPORTED_MODULE_0__["Sprite"].from(this.shadowSpritePaths2[0]);
-            }
-            else {
-                shadowSprite = pixi_js__WEBPACK_IMPORTED_MODULE_0__["Sprite"].from(this.shadowSpritePaths3[0]);
-            }
-            this.app.stage.addChild(shadowSprite);
-            const shadowPos = shadowSprite.position;
-            const shadowTarg = new pixi_js__WEBPACK_IMPORTED_MODULE_0__["Point"](0, 0);
-            shadowSprite.position.set(0 - this.app.view.width, 0); // manual spacing fix
-            shadowSprite.width = this.app.view.width;
-            shadowSprite.height = this.app.view.height;
-            let intervalCount = 0;
-            const spriteID = setInterval(() => {
-                intervalCount++;
-                shadowSprite.position = _utilMath__WEBPACK_IMPORTED_MODULE_5__["utilMath"].lerpPoint(shadowPos, shadowTarg, 0.03);
-                if (shadowPos.position === shadowTarg || intervalCount >= 150) {
-                    console.log("done");
-                    window.clearInterval(spriteID);
-                    this.animateWorkers(shadowSprite);
+    spawnAnimatedWorkers() {
+        const spriteAnimationNames = this.assetManager.animationSpriteNames;
+        const spritePathsAnimations = spriteAnimationNames.map(spriteNames => spriteNames.map(this.getTexture));
+        const animatedSprites = spritePathsAnimations.map(spritePathsAnimation => new pixi_js__WEBPACK_IMPORTED_MODULE_0__["AnimatedSprite"](spritePathsAnimation));
+        let playAnimation = true;
+        animatedSprites.forEach(sprite => {
+            this.app.stage.addChild(sprite);
+            sprite.position.set(0, 0); // manual spacing fix
+            sprite.width = this.app.view.width;
+            sprite.height = this.app.view.height;
+            sprite.gotoAndStop(1);
+            const nextFrame = () => {
+                if (playAnimation) {
+                    sprite.gotoAndStop(Math.floor(sprite.totalFrames * 0.999 * Math.random()));
+                    setTimeout(nextFrame, 300 + Math.random() * 300);
                 }
-            }, 33);
-        }
-    }
-    animateWorkers(shadowSprite) {
-        let interval = 0;
-        let direction = "up"; // workers move up and down while working, starting with up
-        if (shadowSprite === undefined) {
-            alert('no sprite');
-        }
-        this.spriteAnim = setInterval(() => {
-            interval = interval + 1;
-            // switch directions each 5 animation frames
-            if (interval > 5) {
-                interval = 0;
-                if (direction === "up")
-                    direction = "down";
-                else if (direction === "down")
-                    direction = "up";
-            }
-            // set lerp targets
-            const shadowTargetUp = new pixi_js__WEBPACK_IMPORTED_MODULE_0__["Point"](0, 0 + this.app.view.height * 0.03);
-            const shadowTargetDown = new pixi_js__WEBPACK_IMPORTED_MODULE_0__["Point"](0, 0 - this.app.view.height * 0.03);
-            // move up or down
-            if (direction === "up") {
-                shadowSprite.position = _utilMath__WEBPACK_IMPORTED_MODULE_5__["utilMath"].lerpPoint(shadowSprite.position, shadowTargetUp, 0.03);
-            }
-            else {
-                shadowSprite.position = _utilMath__WEBPACK_IMPORTED_MODULE_5__["utilMath"].lerpPoint(shadowSprite.position, shadowTargetDown, 0.03);
-            }
-        }, 100);
+            };
+            nextFrame();
+        });
+        this.stopWorkerAnimation = () => playAnimation = false;
     }
     removeScene() {
         console.log('removeScene');
         this.crowdSound.stop();
         this.conveyorSound.stop();
         this.clockSound.stop();
+        this.stopWorkerAnimation();
         window.clearInterval(this.spriteAnim);
         this.clock.stopClock();
         this.app.stage.removeChild(this.app.stage);
@@ -47902,6 +47879,9 @@ class factoryScene {
         this.clock.stopClock();
         this.photoDisplayer.spawnClickablePrompt("workBegins", [() => {
                 setTimeout(() => {
+                    if (this.isDisposing === true) {
+                        return;
+                    }
                     this.workBuzzerSound.play();
                     this.dollkeeper.startSpawn();
                     this.clock.startClock();
@@ -47917,7 +47897,9 @@ class factoryScene {
         //spawn dialog box
         this.photoDisplayer.spawnClickablePrompt("workEnds", [() => {
                 setTimeout(() => {
-                    //dim lights
+                    if (this.isDisposing === true) {
+                        return;
+                    }
                     this.lightFilter.alpha = 0.5;
                     this.lightSwitchSound.play();
                     this.clock.startClock();
