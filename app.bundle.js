@@ -47376,19 +47376,21 @@ class photoDisplay {
             window.clearInterval(photoIntervalID);
             // disappear
             const disappearID = setInterval(() => {
+                if (photo === undefined || photo.transform === null) {
+                    console.log('premature photo destruction');
+                    window.clearInterval(disappearID);
+                    return;
+                }
                 const point = _utilMath__WEBPACK_IMPORTED_MODULE_1__["utilMath"].lerpPoint(photo.position, top, 0.08);
                 photo.position.set(point.x, point.y);
                 photo.alpha = _utilMath__WEBPACK_IMPORTED_MODULE_1__["utilMath"].lerp(photo.alpha, 0.0, 0.05);
                 if (photo.alpha < 0.1) {
+                    console.log('photo destroyed');
                     photo.parent.removeChild(photo);
                     photo.destroy();
                     window.clearInterval(disappearID);
                 }
             }, 33);
-            //setTimeout(() => {
-            //    window.clearInterval(disappearID);
-            //    photo.parent.removeChild();
-            //}, 2.0);
         });
         return photo;
     }
@@ -47751,8 +47753,7 @@ class factoryScene {
         moneyPocket.position.set(appWidth / 2, appHeight * 0.88);
         const moneyUpdater = () => {
             const currentMoney = this.gameStats.money;
-            const currentGoal = 300;
-            this.gameStats.moneyGoal;
+            const currentGoal = 600; // this.gameStats.moneyGoal;
             if (this.textBox === undefined) {
                 const style = new pixi_js__WEBPACK_IMPORTED_MODULE_0__["TextStyle"]({
                     "fill": "#EEEE00",
