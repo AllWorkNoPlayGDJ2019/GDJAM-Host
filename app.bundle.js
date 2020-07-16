@@ -44039,7 +44039,6 @@ class AssetManager {
         allSpritePathsFlat.forEach(path => this.AssetLocations[path.split('.')[0].substring(1 + path.lastIndexOf('/'))] = path);
     }
     load() {
-        console.log('loading');
         const loader = new pixi_js__WEBPACK_IMPORTED_MODULE_0__["Loader"]();
         return new Promise((resolve) => {
             for (let key of Object.keys(this.AssetLocations)) {
@@ -44049,7 +44048,6 @@ class AssetManager {
                 for (let key of Object.keys(this.AssetLocations)) {
                     this.Textures[key] = resources[key].texture;
                 }
-                console.log({ loaded: this.Textures });
                 resolve();
             });
         });
@@ -44151,7 +44149,6 @@ class GameStats {
         this.itemValue = 0.5;
         this.money = 0;
         this.accumulatedFreeHours = 0;
-        this.today = new Date();
         this.gameStage = 0;
         this.currentDay = new Date(1990, 5, 12, 5, 50, 0, 0);
         this.day1 = {
@@ -44187,6 +44184,9 @@ class GameStats {
             this.day4
         ];
     }
+    get isFinalDay() {
+        return this.gameStage >= this.daystatList.length;
+    }
     get moneyGoal() {
         return this.daystatList[this.gameStage].moneyGoal;
     }
@@ -44204,11 +44204,9 @@ class GameStats {
     finishDay(endTime) {
         const freeHours = (24 - endTime.getUTCHours()) + (60 - endTime.getUTCMinutes()) / 60;
         this.accumulatedFreeHours += freeHours;
-        this.today.setDate(this.today.getDate() + 1);
         this.gameStage++;
     }
     selectImage(imageName) {
-        console.log(imageName);
         this.storyImages.push(imageName);
     }
 }
@@ -44252,8 +44250,9 @@ const app = new pixi_js__WEBPACK_IMPORTED_MODULE_0__["Application"]({
 });
 app.resizeTo = window;
 app.resize();
-console.log([window.innerHeight, window.innerWidth, app.view]);
 document.body.appendChild(app.view);
+console.log('Hello stranger!');
+console.log();
 const gameStat = new _gameStats__WEBPACK_IMPORTED_MODULE_5__["GameStats"]();
 const sceneManager = new _scenes_sceneManager__WEBPACK_IMPORTED_MODULE_8__["SceneManager"](gameStat);
 const assetManager = new _assetManager__WEBPACK_IMPORTED_MODULE_4__["AssetManager"]();
@@ -44568,7 +44567,7 @@ class dollKeeper {
         this.dolls.push(dollObj);
         const dropSound = new _createAudio__WEBPACK_IMPORTED_MODULE_3__["CreateAudio"]("drop-item.mp3");
         const draggable = new _ui_dragable__WEBPACK_IMPORTED_MODULE_1__["Dragable"](dollSprite);
-        draggable.addStartCallback(() => { dollObj.interruptMovement(); console.log('callback'); });
+        draggable.addStartCallback(() => dollObj.interruptMovement());
         draggable.addEndCallback(() => {
             const pos = dollSprite.position;
             if (this.successArea.contains(pos.x, pos.y)) {
@@ -44655,7 +44654,6 @@ class endScene {
             imageSprite.position.set(0.2 * appWidth + Math.random() * 0.6 * appWidth - 0 * imageSprite.width, 0.2 * appHeight + Math.random() * 0.6 * appHeight - 0 * imageSprite.height);
             imageSprite.scale.set(1, 1);
         });
-        console.log({ money, totalFreetime });
         if (money >= 300) {
             console.log("University");
             this.photoDisplayer.spawnPhotoDoubleSided("day5Postcard", "day5PostcardText");
@@ -44816,6 +44814,7 @@ class factoryScene {
         this.box.pivot.set(this.box.width * 0.5, this.box.height * 0.5);
         this.box.position.set(appWidth - this.box.width, appHeight - 0.75 * this.box.height * 0.5);
         this.clock = new _ui_clock__WEBPACK_IMPORTED_MODULE_1__["Clock"](this.getSprite(this.assetManager.Textures["clockFace"]), this.getSprite(this.assetManager.Textures["clockHourPointer"]), this.getSprite(this.assetManager.Textures["clockMinutePointer"]), 0.5);
+        this.clock.isLocked = false;
         this.clock.startClock();
         this.clock.addEndofDayCallbacks(() => this.stayAtWork());
         this.clock.addWorkEndCallback(() => this.overTimeBegins());
@@ -44841,10 +44840,10 @@ class factoryScene {
     }
     stayAtWork() {
         this.clock.stopClock();
-        const intervalId = setInterval(() => {
+        this.goHomeIntervalId = setInterval(() => {
             this.lightFilter.alpha -= 0.005;
             if (this.lightFilter.alpha <= 0.2) {
-                window.clearInterval(intervalId);
+                window.clearInterval(this.goHomeIntervalId);
                 this.photoDisplayer.spawnClickablePrompt("overtime", [() => {
                         this.gameStats.finishDay(this.clock.getTime());
                         this.sceneManager.loadScene('homeScene');
@@ -44874,12 +44873,13 @@ class factoryScene {
         this.stopWorkerAnimation = () => playAnimation = false;
     }
     removeScene() {
-        console.log('removeScene');
+        this.clock.isLocked = true;
         this.crowdSound.stop();
         this.conveyorSound.stop();
         this.clockSound.stop();
         this.stopWorkerAnimation();
         window.clearInterval(this.spriteAnim);
+        window.clearInterval(this.goHomeIntervalId);
         this.clock.stopClock();
         this.app.stage.removeChild(this.app.stage);
         this.app.stage.removeChild(this.textBox);
@@ -45078,7 +45078,6 @@ class menuScene {
             this.sceneManager.loadScene('factoryScene');
         });
         this.app.stage.addChild(playButton);
-        console.log(playButton.width);
         playButton.position.set(appWidth / 2 - playButton.width / 2, appHeight / 2);
         playButton.scale.set(0.5, 0.5);
         const prompt = this.photoDisplayer.spawnClickablePrompt("startPrompt");
@@ -45109,7 +45108,7 @@ class SceneManager {
         this.currentScene = null;
     }
     loadScene(sceneName) {
-        if (this.gamestats.gameStage == this.gamestats.daystatList.length) {
+        if (this.gamestats.isFinalDay) {
             sceneName = "endScene";
         }
         const sceneToLoad = this.scenes[sceneName];
@@ -45118,7 +45117,6 @@ class SceneManager {
             return;
         }
         if (this.currentScene !== null) {
-            console.log("removing previous scene");
             (this.currentScene).removeScene();
         }
         sceneToLoad.showScene();
@@ -45217,12 +45215,15 @@ class Clock {
         return this.time;
     }
     startClock() {
-        if (this.timerId !== undefined) {
+        if (!this.isLocked && this.timerId !== undefined) {
             return;
         }
-        console.log("started time");
         this.timerId = window.setInterval(() => {
             this.time.setMinutes(this.time.getUTCMinutes() + 2, this.time.getSeconds() + 30);
+            if (this.isLocked) {
+                window.clearInterval(this.timerId);
+                return;
+            }
             if (this.time.getUTCHours() == 6 && this.time.getUTCMinutes() == 0) {
                 this.workStartCallback.forEach(x => x());
             }
@@ -45236,7 +45237,9 @@ class Clock {
         }, 100);
     }
     stopClock() {
-        console.log("stopped time");
+        if (this.timerId === undefined) {
+            return;
+        }
         window.clearInterval(this.timerId);
         this.timerId = undefined;
     }
